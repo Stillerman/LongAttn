@@ -10,6 +10,7 @@ import jsonlines
 import time
 from accelerate import Accelerator
 from accelerate.utils import gather_object
+import uuid
 
 
 def inference(data_id, input_ids, attention_mask, model):
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     accelerator = Accelerator()
-    model_path = "Meta-Llama-3.1-70B"
+    model_path = "meta-llama/Llama-3.1-70B"
     file_path = args.input_file_path
     output_file = args.output_file_path
     batch_size = args.batch_size

@@ -68,8 +68,7 @@ class SlideWindow:
     def process_batch(self, batch):
         processed_data = []
         for line in batch:
-            parts = line.split('\t')
-            json_str = parts[1] if len(parts) > 1 else ''
+            json_str = line 
             try:
                 json_data = json.loads(json_str)
             except json.JSONDecodeError as e:
@@ -78,7 +77,7 @@ class SlideWindow:
 
             text = json_data.get('content', '')
             token_ids = self.llm_tokenizer.encode(text)
-            
+                        
             # if len(token_ids) >= 32767:
             #     processed_data.append({"content": text})
 
@@ -137,7 +136,6 @@ def sample_data(file_path, output_path, prefix, sample_size):
     # assign a unique id
     for i, item in enumerate(sample_data, start=1):
         item['data_id'] = prefix + str(i).zfill(7)
-
     # write the sampled data to the output file
     with jsonlines.open(output_path, 'w') as writer:
         for item in sample_data:
@@ -252,14 +250,21 @@ class DateSorted:
         score = []
         proportions = []
         variances = []
-        with jsonlines.open(self.inference_path) as reader:
-            for obj in reader:
-                data_id = obj['data_id']
-                proportion_mean = self.get_mean(obj['first_layer_proportion_score'])
-                variance_mean = self.get_mean(obj['variance'])
-                proportions.append(proportion_mean)
-                variances.append(variance_mean)
-                score.append({"data_id": data_id, "proportion_mean": proportion_mean, "variance_mean": variance_mean})
+        with open(self.inference_path, 'r') as f:
+            for line in f:
+                try:
+                    obj = json.loads(line)
+                    data_id = obj['data_id']
+                    proportion_mean = self.get_mean(obj['first_layer_proportion_score'])
+                    variance_mean = self.get_mean(obj['variance'])
+                    proportions.append(proportion_mean)
+                    variances.append(variance_mean)
+                    score.append({"data_id": data_id, "proportion_mean": proportion_mean, "variance_mean": variance_mean})
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+                    print("last char: ", line[-1])
+                    print("first char: ", line[0])
+                    continue
         
         # Calculate the standard deviation of variances and proportion
 

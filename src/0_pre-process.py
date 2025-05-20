@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 
 def main():
 
-    tokenizer = AutoTokenizer.from_pretrained("Meta-Llama-3-8B")
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-3B")
 
     parser = argparse.ArgumentParser(description="Process and sample data using SlideWindow, FileMerger, and sample_data.")
     

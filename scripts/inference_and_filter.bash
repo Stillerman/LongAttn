@@ -1,8 +1,8 @@
 # #!/bin/bash
 
 # # Set input parameters for the first script
-file_path="/path/to/input_file.jsonl"  # Input file path
-output_file="/path/to/output_inference.jsonl"  # Output file path for inference
+file_path="/fsx/jason/LongAttn/sample_output.jsonl"  # Input file path
+output_file="/fsx/jason/LongAttn/output.jsonl"  # Output file path for inference
 batch_size=6  # Batch size
 
 # Check batch_size
@@ -19,7 +19,7 @@ ERROR_LOG="error.log"
 
 # Run the first inference script
 echo "Running inference..."
-if ! accelerate launch inference_dp.py "$file_path" "$output_file" "$batch_size" 2>>"$ERROR_LOG"; then
+if ! accelerate launch src/1_inference_dp.py "$file_path" "$output_file" "$batch_size" 2>>"$ERROR_LOG"; then
     echo "Inference script failed. Check $ERROR_LOG for details."
     exit 1
 fi
@@ -27,11 +27,11 @@ fi
 # Define parameters for the second script (DateSorted)
 FILE_PATH="$file_path"
 INFERENCE_PATH="$output_file"
-OUTPUT_PATH="/path/to/final_output.jsonl"
+OUTPUT_PATH="/fsx/jason/LongAttn/final_output.jsonl"
 
 # Run the second script (DateSorted)
 echo "Running DateSorted processing..."
-if ! python src/filter_Lds.py \
+if ! python src/2_filtering_by_Lds.py \
     --inference_path $INFERENCE_PATH \
     --output_path $OUTPUT_PATH \
     --file_path $FILE_PATH 2>>"$ERROR_LOG"; then
