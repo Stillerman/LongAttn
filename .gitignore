@@ -4,3 +4,6 @@ output
 error.log
 __pycache__
 .venv
+.gradio
+.DS_Store
+attention_map.json

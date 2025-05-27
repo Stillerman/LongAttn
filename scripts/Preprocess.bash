@@ -7,7 +7,7 @@ MERGED_FILE="/fsx/jason/LongAttn/merged_file.jsonl" # Path to the merged file
 SAMPLE_OUTPUT="/fsx/jason/LongAttn/sample_output.jsonl" # Path to the sampled output file
 SAMPLE_SIZE=1000                       # Sample size
 PREFIX="sample_"                       # Data ID prefix
-MAX_WORKERS=100                         # Maximum number of worker threads
+MAX_WORKERS=8                         # Maximum number of worker threads
 BATCH_SIZE=500                         # Batch size
 WINDOW_SIZE=32768                      # Window size
 

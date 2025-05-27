@@ -26,7 +26,7 @@ def main():
 
     args = parser.parse_args()
 
-    # Step 1: Process data using SlideWindow
+    # # Step 1: Process data using SlideWindow
     slide_window = SlideWindow(llm_tokenizer=tokenizer, max_workers=args.max_workers, batch_size=args.batch_size, window_size=args.window_size)
     slide_window.data_part(args.input_folder, args.output_folder)
 
@@ -34,8 +34,12 @@ def main():
     file_merger = FileMerger(folder_path=args.output_folder, output_file=args.merged_file)
     file_merger.merge_files()
 
+    print("DONE MERGING FILES")
+
     # Step 3: Sample data and assign unique IDs
     sample_data(file_path=args.merged_file, output_path=args.sample_output, prefix=args.prefix, sample_size=args.sample_size)
+
+    print("DONE SAMPLING DATA")
 
 if __name__ == "__main__":
     main()

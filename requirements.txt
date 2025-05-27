@@ -1,6 +1,7 @@
 transformers==4.43.3
+matplotlib
 torch==2.5.1
 jsonlines==4.0.0
-numpy==1.24.4
+numpy
 tqdm==4.66.5
 statistics==1.0.3.5
