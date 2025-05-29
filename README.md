@@ -1,3 +1,13 @@
+# instructions for Datatrove
+1. Modify `scripts/datatrove_preprocess.bash` with dataset name, output folder, window size, and num workers. You will end up with one shard per worker
+2. Run that script on a node with 1 cpu per worker. This will do all the chunking and give each chunk an id
+3. Modify `scripts/SCORE.slurm` to have `--array=0-n` where n is number of workers. Also update `file_path` and `output_path` to match the ones set above. This will grade all shards in parallel
+4. Upload outputs to the hub with something like
+```bash
+for f in final_output_000*.jsonl; do huggingface-cli upload --repo-type dataset --private HuggingFaceTB/dolma-longattn "$f"; done
+```
+
+
 # 🔥LongAttn ：Selecting Long-context Training Data via Token-level Attention
 <div align="center">
   <img src="https://img.shields.io/badge/Self--Attention-black" alt="self-attention">
