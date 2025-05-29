@@ -280,23 +280,30 @@ class DateSorted:
         
         # Sort based on the new score
         score_sorted = sorted(score, key=lambda item: item['token_distance_score'], reverse=True)
+
+        tds = [item['data_id'] for item in score_sorted]
         
-        # Choose the top half of the sorted data
-        length = len(score_sorted)
-        half = length // 2    # Modify Filter Ratio
-        tds = [item['data_id'] for item in score_sorted[:half]]
+        # Return both the data_ids and the score mapping
+        score_mapping = {item['data_id']: {
+            'proportion_mean': item['proportion_mean'],
+            'variance_mean': item['variance_mean'], 
+            'token_distance_score': item['token_distance_score']
+        } for item in score_sorted}
         
-        return tds
+        return tds, score_mapping
 
     def write_to_file(self):
         cnt = 0
-        fls = self.sorted_file()
+        fls, score_mapping = self.sorted_file()
         # fls = self.sorted_file()
         with jsonlines.open(self.file_path, 'r') as reader, jsonlines.open(self.output_path, 'w') as first_layer_writer:
             for data in reader:
-                data_id = data['data_id']
+                data_id = data['id']
                 if data_id in fls:
-                    first_layer_writer.write(data)
+                    # Add the score information to the data
+                    data_with_scores = data.copy()
+                    data_with_scores.update(score_mapping[data_id])
+                    first_layer_writer.write(data_with_scores)
                 else:
                     cnt+=1 
         print(cnt)

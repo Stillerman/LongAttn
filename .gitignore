@@ -7,3 +7,5 @@ __pycache__
 .gradio
 .DS_Store
 attention_map.json
+datatrove_output*
+slurm_out

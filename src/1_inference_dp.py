@@ -47,8 +47,8 @@ def process_file(data_list, llm_tokenizer, model, batch_size, output_file):
     batch = []
     data_id = []
     for data in data_list:
-        batch.append(bos_token + ' ' + data['content'])
-        data_id.append(data['data_id'])
+        batch.append(bos_token + ' ' + data['text'])
+        data_id.append(data['id'])
         if len(batch) >= batch_size:
             input_ids, attention_mask = process_batch(batch, llm_tokenizer)
             input_ids = input_ids.to('cuda')

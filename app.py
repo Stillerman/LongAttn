@@ -8,6 +8,16 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 import os
 import tempfile
+import tokenizers
+from transformers import AutoTokenizer
+
+# Initialize Meta Llama 3 tokenizer
+try:
+    llama3_tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B")
+except:
+    # Fallback if the model isn't available
+    llama3_tokenizer = None
+    print("Warning: Could not load Meta-Llama-3-8B tokenizer")
 
 # Huggingface dataset info
 runs = [
@@ -30,10 +40,20 @@ runs = [
         "sample_file": "gutenburg-10k/sample_output.jsonl"
     },
     {
+        "name": "fwedu-1k",
+        "repo_id": "HuggingFaceTB/gutenburg-longattn-1000",
+        "inference_file": "fwedu-1k/output.jsonl",
+        "sample_file": "fwedu-1k/sample_output.jsonl",
+        "data_id_key": "id",
+        "content_key": "text"
+    },
+    {
         "name": "Local",
         "repo_id": "Local",
         "inference_file": "/fsx/jason/LongAttn/output.jsonl",
-        "sample_file": "/fsx/jason/LongAttn/sample_output.jsonl"
+        "sample_file": "/fsx/jason/LongAttn/datatrove_output_fw/preprocessed_data_00000.jsonl",
+        "data_id_key": "id",
+        "content_key": "text"
     }
 ]
 
@@ -46,17 +66,23 @@ current_data = {
     "proportion_means": None,
     "variance_means": None,
     "token_distance_scores": None,
-    "file_path": None
+    "file_path": None,
+    "data_id_key": None,
+    "content_key": None
 }
 
 def load_data_for_run(run_name):
     """Load data for the selected run"""
+    # breakpoint()
     # Find the run configuration
     run_config = None
     for run in runs:
         if run["name"] == run_name:
             run_config = run
             break
+
+    print("Got run config:")
+    print(run_config)
     
     if not run_config:
         raise ValueError(f"Run {run_name} not found")
@@ -111,7 +137,9 @@ def load_data_for_run(run_name):
         "proportion_means": proportion_means,
         "variance_means": variance_means,
         "token_distance_scores": token_distance_scores,
-        "file_path": file_path
+        "file_path": file_path,
+        "data_id_key": run_config.get("data_id_key", "data_id"),
+        "content_key": run_config.get("content_key", "content")
     })
     
     return len(scores)
@@ -194,14 +222,23 @@ def get_document_by_index(index):
         return "No data loaded", "No data loaded"
         
     # Get the data_id of the selected document
-    data_id = current_data["sorted_scores"][index]['data_id']
+    data_id = current_data["sorted_scores"][index]["data_id"] # this ones always data_id
     
     # Find the document in the file
     with jsonlines.open(current_data["file_path"], 'r') as reader:
         for data in reader:
-            if data["data_id"] == data_id:
+            if data[current_data["data_id_key"]] == data_id:
                 doc = data
                 break
+    
+    # Calculate tokenized length using Meta Llama 3 tokenizer
+    tokenized_length = "N/A"
+    if llama3_tokenizer and doc.get(current_data["content_key"]):
+        try:
+            tokens = llama3_tokenizer.encode(doc[current_data["content_key"]])
+            tokenized_length = len(tokens)
+        except Exception as e:
+            tokenized_length = f"Error: {str(e)}"
     
     # Prepare display information
     score_info = f"""
@@ -209,9 +246,10 @@ def get_document_by_index(index):
     Token Distance Score: {current_data["sorted_scores"][index]['token_distance_score']:.4f}
     Proportion Mean: {current_data["sorted_scores"][index]['proportion_mean']:.4f}
     Variance Mean: {current_data["sorted_scores"][index]['variance_mean']:.2e}
+    Tokenized Length (Meta Llama 3): {tokenized_length}
     """
     
-    return score_info, doc['content']
+    return score_info, doc[current_data["content_key"]]
 
 def update_display(index):
     # Get document info
@@ -225,6 +263,7 @@ def change_run(run_name):
     try:
         # Load data for the new run
         max_docs = load_data_for_run(run_name)
+        print(f"Loaded documents for run {run_name}")
         
         # Reset to first document
         score_info, content = get_document_by_index(0)
@@ -241,6 +280,8 @@ def change_run(run_name):
             stats
         )
     except Exception as e:
+        print(f"Error loading run {run_name}: {str(e)}")
+        print(e)
         error_msg = f"Error loading run {run_name}: {str(e)}"
         return (
             gr.Slider(minimum=0, maximum=0, step=1, value=0, 
